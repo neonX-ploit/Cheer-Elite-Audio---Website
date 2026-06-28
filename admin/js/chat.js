@@ -38,7 +38,7 @@ export function renderClientList(chats) {
   clientListEl.innerHTML = '';
 
   const conversations = chats.filter(c => c.adminReplied);
-  const requests      = chats.filter(c => !c.adminReplied);
+  const requests      = chats.filter(c => !c.adminReplied && c.lastMessage !== '');
 
   if (conversations.length === 0 && requests.length === 0) {
     clientListEl.innerHTML = `
@@ -315,11 +315,14 @@ export function closeChat() {
 export async function deleteActiveChat() {
   if (!state.activeChatId) return;
   try {
-    await updateDoc(doc(db, 'chats', state.activeChatId), {
-      archivedByAdmin: true,
-      archivedAt:      serverTimestamp(),
-      adminReplied:    false,   // ← add this
-    });
+  await updateDoc(doc(db, 'chats', state.activeChatId), {
+    archivedByAdmin: true,
+    archivedAt:      serverTimestamp(),
+    adminReplied:    false,
+    lastMessage:     '',
+    unread:          0,
+    deletedAt:       serverTimestamp(),
+  });
     showToast('Conversation removed from your inbox');
     closeChat();
   } catch (err) {

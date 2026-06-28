@@ -67,6 +67,7 @@ let typingBubbleEl = null;
 
 // ── Reply state ───────────────────────────────────────
 let replyingTo = null; // { docId, text, senderName, isClient }
+let currentChatDeletedAt = null;
 
 // ── Message doc ID map (docId → DOM wrap element) ─────
 // Used for scroll-to-quoted and reaction updates
@@ -98,6 +99,7 @@ overlay.addEventListener('click', () => toggleModal(false));
 function toggleModal(open) {
   isOpen = open;
   if (open) {
+    document.body.style.overflow = 'hidden';
     overlay.classList.remove('hidden');
     modal.classList.remove('hidden');
     requestAnimationFrame(() => {
@@ -118,6 +120,7 @@ function toggleModal(open) {
       });
     }
   } else {
+    document.body.style.overflow = '';
     overlay.classList.remove('is-open');
     modal.classList.remove('is-open');
     launcher.classList.remove('chat-open');
@@ -660,6 +663,11 @@ function subscribeMessages() {
       const docId = ch.doc.id;
       const data  = ch.doc.data();
 
+      // Skip messages sent before admin deleted the conversation
+      if (ch.type === 'added' && data.timestamp && currentChatDeletedAt) {
+        if (data.timestamp.toMillis() < currentChatDeletedAt) return;
+      }
+
       if (ch.type === 'added') {
         msgDataMap.set(docId, data);
         const wrap = renderBubble(data, docId);
@@ -1093,6 +1101,10 @@ function renderBubble(data, docId) {
       img.style.cssText = 'max-width:220px;width:100%;border-radius:12px;display:block;cursor:zoom-in;';
       img.src = imgUrl;
       img.addEventListener('click', () => openImageLightbox(imgUrl));
+      img.addEventListener('contextmenu', e => e.preventDefault()); // ← ADD
+      img.setAttribute('draggable', 'false');                        // ← ADD
+      img.style.userSelect = 'none';                                 // ← ADD
+      img.style.webkitUserSelect = 'none';                           // ← ADD
       img.addEventListener('load',  () => { imgWrap.style.minHeight = ''; imgWrap.style.background = ''; });
       img.addEventListener('error', () => {
         imgWrap.innerHTML = '<span style="font-size:11px;color:rgba(238,244,247,0.4);padding:12px;">⚠️ Image failed to load</span>';
@@ -1131,6 +1143,10 @@ function renderBubble(data, docId) {
       img.style.cssText = 'max-width:220px;width:100%;border-radius:12px;display:block;cursor:zoom-in;';
       img.src = imgUrl;
       img.addEventListener('click', () => openImageLightbox(imgUrl));
+      img.addEventListener('contextmenu', e => e.preventDefault()); // ← ADD
+      img.setAttribute('draggable', 'false');                        // ← ADD
+      img.style.userSelect = 'none';                                 // ← ADD
+      img.style.webkitUserSelect = 'none';                           // ← ADD
       img.addEventListener('load',  () => { imgWrap.style.minHeight = ''; imgWrap.style.background = ''; });
       img.addEventListener('error', () => {
         imgWrap.innerHTML = '<span style="font-size:11px;color:rgba(238,244,247,0.4);padding:12px;">⚠️ Image failed to load</span>';
@@ -1330,6 +1346,7 @@ function subscribeTyping() {
   if (unsubTyping) unsubTyping();
   unsubTyping = onSnapshot(doc(db, 'chats', chatId), snap => {
     if (!snap.exists()) return;
+    currentChatDeletedAt = snap.data().deletedAt?.toMillis() || null;
     showAdminTypingBubble(!!snap.data().typingAdmin);
   });
 }
