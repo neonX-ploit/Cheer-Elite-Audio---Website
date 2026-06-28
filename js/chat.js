@@ -1297,7 +1297,6 @@ async function sendMsg() {
       lastUpdated:     serverTimestamp(),
       unread:          1,
       archivedByAdmin: false,
-      adminReplied:    false,
     });
   } catch (err) { console.error('Send error:', err); }
 }
