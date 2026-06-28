@@ -649,7 +649,25 @@ function initScrollBtn() {
     }
   });
 }
+function applyClientGrouping() {
+  const wraps = [...messagesArea.querySelectorAll('.chat-msg-wrap')];
+  wraps.forEach((wrap, i) => {
+    const sender = wrap.classList.contains('client') ? 'client' : 'admin';
+    const prev = wraps[i - 1];
+    const next = wraps[i + 1];
+    const prevSender = prev ? (prev.classList.contains('client') ? 'client' : 'admin') : null;
+    const nextSender = next ? (next.classList.contains('client') ? 'client' : 'admin') : null;
 
+    const isFirst = sender !== prevSender;
+    const isLast  = sender !== nextSender;
+
+    wrap.classList.remove('group-solo', 'group-first', 'group-middle', 'group-last');
+    if (isFirst && isLast)  wrap.classList.add('group-solo');
+    else if (isFirst)       wrap.classList.add('group-first');
+    else if (isLast)        wrap.classList.add('group-last');
+    else                    wrap.classList.add('group-middle');
+  });
+}
 // ══════════════════════════════════════════════════════
 // FEATURE 5: Real-time messages — now stores docId,
 // handles reaction updates via 'modified' changes,
@@ -710,7 +728,8 @@ function subscribeMessages() {
       }
     }
 
-        if (snap.docChanges().some(ch => ch.type === 'added')) {
+    if (snap.docChanges().some(ch => ch.type === 'added')) {
+      applyClientGrouping();
       scrollBottom();
     }
   });

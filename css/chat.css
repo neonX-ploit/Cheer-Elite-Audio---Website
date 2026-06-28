@@ -166,11 +166,30 @@
 .chat-msg-time { font-size: 10px; color: rgba(238,244,247,0.4); margin-top: 3px; padding: 0 4px; }
 .chat-msg-bubble { padding: 8px 12px; border-radius: 16px; line-height: 1.4; word-break: break-word; }
 .chat-msg-wrap.client .chat-msg-bubble {
-  background: linear-gradient(135deg, #00E5C3, #00C2E0); color: #fff; border-bottom-right-radius: 4px;
+  background: linear-gradient(135deg, #00E5C3, #00C2E0); color: #fff;
 }
 .chat-msg-wrap.admin .chat-msg-bubble {
-  background: #111920; color: #EEF4F7; border: 1px solid rgba(0,229,195,0.12); border-bottom-left-radius: 4px;
+  background: #111920; color: #EEF4F7; border: 1px solid rgba(0,229,195,0.12);
 }
+
+/* Grouping — client (right side) */
+.chat-msg-wrap.client.group-first .chat-msg-bubble  { border-bottom-right-radius: 4px; }
+.chat-msg-wrap.client.group-middle .chat-msg-bubble { border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
+.chat-msg-wrap.client.group-last .chat-msg-bubble   { border-top-right-radius: 4px; }
+
+/* Grouping — admin (left side) */
+.chat-msg-wrap.admin.group-first .chat-msg-bubble   { border-bottom-left-radius: 4px; }
+.chat-msg-wrap.admin.group-middle .chat-msg-bubble  { border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+.chat-msg-wrap.admin.group-last .chat-msg-bubble    { border-top-left-radius: 4px; }
+
+/* Spacing between grouped messages */
+.chat-msg-wrap.group-first,
+.chat-msg-wrap.group-solo  { margin-top: 10px; }
+.chat-msg-wrap.group-middle,
+.chat-msg-wrap.group-last  { margin-top: 2px; }
+
+/* Hide timestamp except on last in group */
+.chat-msg-wrap:not(.group-last):not(.group-solo) .chat-msg-time { display: none; }
 
 #chat-input-bar {
   display: flex; align-items: flex-end; gap: 8px;

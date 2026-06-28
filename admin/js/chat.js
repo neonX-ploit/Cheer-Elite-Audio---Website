@@ -365,15 +365,21 @@ function renderMessage(data, msgId) {
        </div>`
     : '';
 
-  const reactionsHTML = (data.reactions && Object.keys(data.reactions).length)
-    ? `<div class="msg-reactions">${
-        Object.entries(data.reactions)
-          .filter(([, voters]) => Object.keys(voters).length > 0)
-          .map(([emoji, voters]) =>
-            `<span class="msg-reaction" data-emoji="${emoji}">${emoji} ${Object.keys(voters).length}</span>`
-          ).join('')
-      }</div>`
-    : '';
+  const reactionsHTML = (() => {
+    if (!data.reactions || !Object.keys(data.reactions).length) return '';
+    const parts = [];
+    Object.entries(data.reactions).forEach(([key, val]) => {
+      if (typeof val === 'string') {
+        // Client format: { "client": "❤️" }
+        parts.push(`<span class="msg-reaction" data-emoji="${val}">${val} 1</span>`);
+      } else if (typeof val === 'object') {
+        // Admin format: { "❤️": { "admin": true } }
+        const count = Object.keys(val).length;
+        if (count > 0) parts.push(`<span class="msg-reaction" data-emoji="${key}">${key} ${count}</span>`);
+      }
+    });
+    return parts.length ? `<div class="msg-reactions">${parts.join('')}</div>` : '';
+  })();
 
   const actionsHTML = `
     <div class="msg-actions">

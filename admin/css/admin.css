@@ -562,6 +562,7 @@ html, body {
   position: relative;
   z-index: 10;
   transition: background .2s;
+  align-self: stretch;
 }
 
 #order-resize-handle:hover,
