@@ -14,6 +14,9 @@ import {
 const CLOUDINARY_CLOUD  = 'dz7oewy7z';
 const CLOUDINARY_PRESET = 'Cheer Elite Audio - trackdeliveries';
 
+export let currentAdminName = 'Support';
+export function setCurrentAdminName(name) { currentAdminName = name; }
+
 let adminTypingTimeout = null;
 let unsubAdminTyping   = null;
 let adminTypingBubble  = null;
@@ -981,7 +984,7 @@ async function sendPaymentMessage(type) {
       type: 'payment-details',
       paymentType: type,
       sender: 'admin',
-      senderName: 'Support',
+      senderName: state.adminName,
       timestamp: serverTimestamp(),
       seenByClient: false
     });
@@ -1034,7 +1037,7 @@ async function sendReply() {
       // Send each image as its own message (only first gets caption + replyTo)
       for (let i = 0; i < urls.length; i++) {
         const imgPayload = {
-          type: 'image', sender: 'admin', senderName: 'Support',
+          type: 'image', sender: 'admin', senderName: state.adminName,
           imageUrl: urls[i], timestamp: serverTimestamp(), seenByClient: false
         };
         if (i === 0 && text)         imgPayload.text    = text;
@@ -1057,7 +1060,7 @@ async function sendReply() {
 
   // ── Handle text only ─────────────────────────────────────
   const payload = {
-    text, sender: 'admin', senderName: 'Support',
+    text, sender: 'admin', senderName: state.adminName,
     type: 'text', timestamp: serverTimestamp(), seenByClient: false
   };
 
@@ -1168,7 +1171,7 @@ export function initUpload() {
       const fileUrl = await uploadToCloudinary(selectedFile, progressFill);
 
       await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-        type: 'track', sender: 'admin', senderName: 'Support',
+        type: 'track', sender: 'admin', senderName: state.adminName,,
         trackName, fileName: selectedFile.name, fileUrl, version,
         timestamp: serverTimestamp(), seenByClient: false
       });

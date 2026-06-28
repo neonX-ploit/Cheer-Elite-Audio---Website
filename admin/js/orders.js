@@ -303,7 +303,7 @@ export function renderOrders(orders) {
 
       await updateDoc(doc(db, 'orders', id), { status: 'in_production', price: finalPrice, acceptedAt: serverTimestamp() });
       await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-        type: 'text', sender: 'admin', senderName: 'Support',
+        type: 'text', sender: 'admin', senderName: state.adminName,
         text: `Your order has been accepted and is now in production!${finalPrice ? ` Price: ${type === 'PH' ? '₱' : '$'}${finalPrice}` : ''}`,
         timestamp: serverTimestamp(), seenByClient: false
       });
@@ -327,7 +327,7 @@ export function renderOrders(orders) {
         onConfirm: async () => {
           await updateDoc(doc(db, 'orders', id), { status: 'declined', declinedAt: serverTimestamp() });
           await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-            type: 'text', sender: 'admin', senderName: 'Support',
+            type: 'text', sender: 'admin', senderName: state.adminName,
             text: `❌ Unfortunately, we're unable to accept your order at this time. Please feel free to reach out if you have any questions.`,
             timestamp: serverTimestamp(), seenByClient: false
           });
@@ -466,7 +466,7 @@ async function createOrder(type) {
     : `ORDER_FORM_PH:${orderId}:${nextNumber}`;
 
   await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-    type: 'order_form', sender: 'admin', senderName: 'Support',
+    type: 'order_form', sender: 'admin', senderName: state.adminName,
     orderId, orderNumber: nextNumber, orderType: type, formHtml: formMsg,
     timestamp: serverTimestamp(), seenByClient: false
   });

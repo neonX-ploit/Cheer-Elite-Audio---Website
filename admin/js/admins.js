@@ -1,6 +1,7 @@
 import { db, storage, auth } from './firebase.js';
 import { $, getInitials }    from './utils.js';
 import { showToast }         from './ui.js';
+import { state } from './state.js';
 import {
   doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -15,6 +16,9 @@ export async function loadAdminProfile(user) {
 
   const profile = docSnap.exists() ? docSnap.data() : {};
   const name    = profile.name  || user.displayName || user.email.split('@')[0];
+
+  state.adminName = name;
+
   const photo   = profile.photo || '';
   const role    = profile.role  || 'admin';
 
