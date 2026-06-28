@@ -8,5 +8,6 @@ export const state = {
   activeAudio:   null,
   currentPage:   'chats',
   pendingAction: null,
-  adminName: 'Support',
+  adminName:  'Support',
+  adminPhoto: '',
 };

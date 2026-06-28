@@ -342,7 +342,9 @@ let pastedImages = []; // [{ file, objectUrl }, ...] — images pasted into repl
 function renderMessage(data, msgId) {
   const messagesAreaEl = $('messages-area');
   const wrap           = document.createElement('div');
-  const senderLabel = data.sender === 'admin' ? (data.senderName || 'You (Admin)') : (data.senderName || 'Client');
+  const senderLabel = data.sender === 'admin'
+    ? (data.senderName ? `${data.senderName} (Admin)` : 'You (Admin)')
+    : (data.senderName || 'Client');
   const ts             = data.timestamp ? formatFull(data.timestamp.toDate()) : 'Just now';
 
   const seenHTML = data.sender === 'admin'
@@ -404,10 +406,12 @@ function renderMessage(data, msgId) {
 
   const chatData   = state.allChats.find(c => c.id === state.activeChatId) || {};
   const avatarHTML = data.sender === 'client'
-    ? (chatData.clientPhoto
-        ? `<img class="msg-avatar" src="${escHtml(chatData.clientPhoto)}" alt="" />`
-        : `<div class="msg-avatar-placeholder">${getInitials(chatData.clientName || data.senderName || 'C')}</div>`)
-    : '';
+    ? (chatData?.clientPhoto
+        ? `<img src="${escHtml(chatData.clientPhoto)}" class="msg-avatar" />`
+        : `<div class="msg-avatar-placeholder">${getInitials(chatData?.clientName || data.senderName || 'C')}</div>`)
+    : (data.senderPhoto
+        ? `<img src="${escHtml(data.senderPhoto)}" class="msg-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" />`
+        : `<div class="msg-avatar-placeholder">${getInitials(data.senderName || 'A')}</div>`);
 
   wrap.className     = `msg-wrap ${data.sender}`;
   wrap.dataset.msgId = msgId;
@@ -985,6 +989,7 @@ async function sendPaymentMessage(type) {
       paymentType: type,
       sender: 'admin',
       senderName: state.adminName,
+      senderPhoto: state.adminPhoto,
       timestamp: serverTimestamp(),
       seenByClient: false
     });
@@ -1037,7 +1042,7 @@ async function sendReply() {
       // Send each image as its own message (only first gets caption + replyTo)
       for (let i = 0; i < urls.length; i++) {
         const imgPayload = {
-          type: 'image', sender: 'admin', senderName: state.adminName,
+          type: 'image', sender: 'admin', senderName: state.adminName, senderPhoto: state.adminPhoto,
           imageUrl: urls[i], timestamp: serverTimestamp(), seenByClient: false
         };
         if (i === 0 && text)         imgPayload.text    = text;
@@ -1060,7 +1065,7 @@ async function sendReply() {
 
   // ── Handle text only ─────────────────────────────────────
   const payload = {
-    text, sender: 'admin', senderName: state.adminName,
+    text, sender: 'admin', senderName: state.adminName, senderPhoto: state.adminPhoto,
     type: 'text', timestamp: serverTimestamp(), seenByClient: false
   };
 
@@ -1171,7 +1176,7 @@ export function initUpload() {
       const fileUrl = await uploadToCloudinary(selectedFile, progressFill);
 
       await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-        type: 'track', sender: 'admin', senderName: state.adminName,
+        type: 'track', sender: 'admin', senderName: state.adminName, senderPhoto: state.adminPhoto,
         trackName, fileName: selectedFile.name, fileUrl, version,
         timestamp: serverTimestamp(), seenByClient: false
       });

@@ -17,7 +17,7 @@ export async function loadAdminProfile(user) {
   const profile = docSnap.exists() ? docSnap.data() : {};
   const name    = profile.name  || user.displayName || user.email.split('@')[0];
 
-  state.adminName = name;
+  state.adminPhoto = profile.photo || '';
 
   const photo   = profile.photo || '';
   const role    = profile.role  || 'admin';
