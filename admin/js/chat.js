@@ -689,8 +689,8 @@ function ensureScrollToLatestBtn() {
       <polyline points="6 9 12 15 18 9"/>
     </svg>`;
   btn.style.cssText = `
-    position:fixed; left:50%; transform:translateX(-50%);
-    bottom:110px;
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:20px;
     width:36px; height:36px; border-radius:50%;
     background:var(--teal,#00E5C3); border:none; cursor:pointer;
     display:none; align-items:center; justify-content:center;
@@ -703,11 +703,11 @@ function ensureScrollToLatestBtn() {
   });
 
   // Attach to reply-bar so it floats centered above it
-const chatPanel = $('chat-panel');
-  if (chatPanel) {
-    chatPanel.appendChild(btn);
+  const messagesArea = $('messages-area');
+  if (messagesArea) {
+    messagesArea.style.position = 'relative';
+    messagesArea.appendChild(btn);
   }
-
   // Center button on chat panel, stays fixed on scroll
   function repositionBtn() {
     const panel = $('chat-panel');
