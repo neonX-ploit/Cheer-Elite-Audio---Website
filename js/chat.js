@@ -1182,21 +1182,25 @@ function renderBubble(data, docId) {
     ts.textContent = data.timestamp ? fmtTime(data.timestamp.toDate()) : 'Just now';
     wrap.appendChild(ts);
 
-    } else {
-      // Default text bubble
-      if (!isClient) {
-        if (data.senderPhoto) {
-          const av = document.createElement('img');
-          av.src = data.senderPhoto;
-          av.style.cssText = 'width:28px;height:28px;border-radius:50%;object-fit:cover;margin-bottom:4px;display:block;';
-          av.onerror = () => av.remove();
-          wrap.appendChild(av);
-        }
+  } else {
+    // Default text bubble
+    if (!isClient) {
+      if (data.senderPhoto) {
+        const av = document.createElement('img');
+        av.src = data.senderPhoto;
+        av.style.cssText = 'width:28px;height:28px;border-radius:50%;object-fit:cover;margin-bottom:4px;display:block;';
+        av.onerror = () => av.remove();
+        wrap.appendChild(av);
+      }
       const nameEl = document.createElement('div');
-      const bubble = document.createElement('div');
-      bubble.className = 'chat-msg-bubble';
-      bubble.textContent = data.text || '';
-      wrap.appendChild(bubble);
+      nameEl.style.cssText = 'font-size:10px;font-weight:700;color:#00E5C3;margin-bottom:3px;';
+      nameEl.textContent = data.senderName !== 'Support' && data.senderName ? data.senderName : '';
+      if (nameEl.textContent) wrap.appendChild(nameEl);
+    }
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-msg-bubble';
+    bubble.textContent = data.text || '';
+    wrap.appendChild(bubble);
   }
 
   // Render any existing reactions

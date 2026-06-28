@@ -70,20 +70,55 @@ export function initProfileEditor(user) {
 
   /* ── Photo upload ── */
   $('settings-photo-input')?.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+      const file = e.target.files[0];
+      if (!file) return;
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) return showToast('Only JPG, PNG or WebP allowed');
-    if (file.size > 2 * 1024 * 1024)  return showToast('Image must be under 2MB');
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(file.type)) return showToast('Only JPG, PNG or WebP allowed');
+      if (file.size > 2 * 1024 * 1024)  return showToast('Image must be under 2MB');
 
-    showToast('Uploading photo…');
-    const storageRef = ref(storage, `admin-photos/${user.uid}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+      // Instant local preview before upload
+      const localUrl = URL.createObjectURL(file);
+      const setAv = $('settings-av');
+      if (setAv) {
+        setAv.innerHTML = `<img src="${localUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;opacity:0.6;" />`;
+      }
 
-    await setDoc(doc(db, 'admins', user.uid), { photo: url }, { merge: true });
-    showToast('Photo updated!');
-    loadAdminProfile(user);
-  });
+      showToast('Uploading photo…');
+        try {
+// Step 1 — get signed credentials
+      const sigRes  = await fetch('/.netlify/functions/cloudinary-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadType: 'admin_photo' }),
+      });
+      if (!sigRes.ok) throw new Error(`Signing failed: ${sigRes.status}`);
+      const { signature, timestamp, api_key, cloud_name, folder } = await sigRes.json();
+
+      // Step 2 — upload directly to Cloudinary
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('api_key', api_key);
+          formData.append('timestamp', timestamp);
+          formData.append('signature', signature);
+          formData.append('folder', 'admin_photos');
+
+          const upRes  = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+          if (!upRes.ok) throw new Error(`Cloudinary upload failed: ${upRes.status}`);
+          const upJson = await upRes.json();
+          if (!upJson.secure_url) throw new Error('No URL returned');
+
+          const json = { url: upJson.secure_url };
+
+          await setDoc(doc(db, 'admins', user.uid), { photo: json.url }, { merge: true });
+          showToast('✅ Photo saved!');
+          loadAdminProfile(user);
+        } catch (err) {
+          showToast('❌ Upload failed. Try again.');
+          console.error(err);
+        }
+    });
 }
