@@ -342,7 +342,7 @@ let pastedImages = []; // [{ file, objectUrl }, ...] — images pasted into repl
 function renderMessage(data, msgId) {
   const messagesAreaEl = $('messages-area');
   const wrap           = document.createElement('div');
-  const senderLabel    = data.sender === 'admin' ? 'You (Admin)' : (data.senderName || 'Client');
+  const senderLabel = data.sender === 'admin' ? (data.senderName || 'You (Admin)') : (data.senderName || 'Client');
   const ts             = data.timestamp ? formatFull(data.timestamp.toDate()) : 'Just now';
 
   const seenHTML = data.sender === 'admin'
@@ -1171,7 +1171,7 @@ export function initUpload() {
       const fileUrl = await uploadToCloudinary(selectedFile, progressFill);
 
       await addDoc(collection(db, 'chats', state.activeChatId, 'messages'), {
-        type: 'track', sender: 'admin', senderName: state.adminName,,
+        type: 'track', sender: 'admin', senderName: state.adminName,
         trackName, fileName: selectedFile.name, fileUrl, version,
         timestamp: serverTimestamp(), seenByClient: false
       });

@@ -1183,16 +1183,19 @@ function renderBubble(data, docId) {
     wrap.appendChild(ts);
 
   } else {
-    // Default text bubble
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-msg-bubble';
-    bubble.textContent = data.text || '';
-    wrap.appendChild(bubble);
-
-    const ts = document.createElement('div');
-    ts.className = 'chat-msg-time';
-    ts.textContent = data.timestamp ? fmtTime(data.timestamp.toDate()) : 'Just now';
-    wrap.appendChild(ts);
+      // Default text bubble
+      if (!isClient) {
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-size:10px;font-weight:700;color:#00E5C3;margin-bottom:3px;';
+        nameEl.textContent = data.senderName && data.senderName !== 'Support'
+          ? data.senderName
+          : 'Cheer Elite Audio';
+        wrap.appendChild(nameEl);
+      }
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-msg-bubble';
+      bubble.textContent = data.text || '';
+      wrap.appendChild(bubble);
   }
 
   // Render any existing reactions
