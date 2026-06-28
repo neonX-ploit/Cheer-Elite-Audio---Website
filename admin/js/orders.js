@@ -3,7 +3,7 @@ import { state }                   from './state.js';
 import { $, escHtml, formatFull }  from './utils.js';
 import { showToast, openConfirmModal } from './ui.js';
 import {
-  collection, doc, addDoc, getDocs, updateDoc, deleteDoc,
+  collection, doc, addDoc, getDocs, updateDoc, deleteDoc, getDoc, setDoc,
   onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -225,8 +225,8 @@ export function renderOrders(orders) {
 
   /* ──────────────── SECTION 3: COMPLETED ORDERS ──────────────── */
   const completedHeader = document.createElement('div');
-  completedHeader.style.cssText = '...color:#64748B;...';
-completedHeader.innerHTML = `<span style="...background:#64748B;..."></span> Completed Orders`;
+  completedHeader.style.cssText = 'font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:flex;align-items:center;gap:6px;';
+  completedHeader.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#64748B;display:inline-block;"></span> Completed Orders`;
   orderListEl.appendChild(completedHeader);
 
   if (completed.length === 0) {
@@ -444,8 +444,10 @@ export function initNewOrderBtn() {
 /* ── Create order ──────────────────────────────────────── */
 async function createOrder(type) {
   const chatData  = state.allChats.find(c => c.id === state.activeChatId) || {};
-  const allOrders = await getDocs(query(collection(db, 'orders'), where('chatId', '==', state.activeChatId)));
-  const nextNumber = allOrders.size + 1;
+  const counterRef = doc(db, 'meta', 'orderCounter');
+  const counterSnap = await getDoc(counterRef);
+  const nextNumber = (counterSnap.exists() ? counterSnap.data().count : 0) + 1;
+  await setDoc(counterRef, { count: nextNumber }, { merge: true });
 
   const orderId = (await addDoc(collection(db, 'orders'), {
     chatId: state.activeChatId,

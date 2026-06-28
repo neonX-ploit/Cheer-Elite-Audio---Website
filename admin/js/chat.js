@@ -119,6 +119,7 @@ export function renderClientList(chats) {
 function buildClientItem(chat) {
   const item = document.createElement('div');
   item.className = 'client-item';
+  item.dataset.chatId = chat.id;
   if (chat.id === state.activeChatId) item.classList.add('active');
   if ((chat.unread || 0) > 0)         item.classList.add('has-unread');
 
@@ -206,8 +207,7 @@ export async function openChat(chat) {
   updateDoc(doc(db, 'chats', chat.id), { unread: 0 }).catch(console.error);
 
   document.querySelectorAll('.client-item').forEach(el => {
-    el.classList.toggle('active',
-      el.querySelector('.ci-name')?.textContent === (chat.clientName || 'Unknown'));
+    el.classList.toggle('active', el.dataset.chatId === chat.id);
   });
 
   startListeningToClientTyping(chat.id);
@@ -667,9 +667,6 @@ async function sendReaction(msgId, emoji) {
         [`reactions.${emoji}.${myId}`]: true
       });
     }
-    // If alreadyReacted, updated stays {} which clears everything
-
-    await updateDoc(msgRef, { reactions: updated });
   } catch (err) { console.error('Reaction error:', err); }
 }
 
@@ -1207,52 +1204,44 @@ export function initUpload() {
 }
 
 // Replace the old uploadToCloudinary function with this:
-function uploadToCloudinary(file, progressFill) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // 1. Get signed credentials from your Netlify function
-      const res = await fetch("/.netlify/functions/cloudinary-upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadType: "track" })
-      });
-      const { signature, timestamp, api_key, cloud_name, folder } = await res.json();
+async function uploadToCloudinary(file, progressFill) {
+  const res = await fetch("/.netlify/functions/cloudinary-upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uploadType: "track" })
+  });
+  const { signature, timestamp, api_key, cloud_name, folder } = await res.json();
 
-      // 2. Build the signed upload — no preset needed anymore
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", api_key);
-      formData.append("timestamp", timestamp);
-      formData.append("signature", signature);
-      formData.append("folder", folder);
-      formData.append("resource_type", "auto");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("api_key", api_key);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+  formData.append("resource_type", "auto");
 
-      // 3. XHR so progress bar still works
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`);
 
-      xhr.upload.addEventListener("progress", e => {
-        if (e.lengthComputable && progressFill) {
-          progressFill.style.width = ((e.loaded / e.total) * 100) + "%";
-        }
-      });
+    xhr.upload.addEventListener("progress", e => {
+      if (e.lengthComputable && progressFill) {
+        progressFill.style.width = ((e.loaded / e.total) * 100) + "%";
+      }
+    });
 
-      xhr.addEventListener("load", () => {
-        if (xhr.status === 200) {
-          const json = JSON.parse(xhr.responseText);
-          if (json.secure_url) resolve(json.secure_url);
-          else reject(new Error("No URL in response"));
-        } else {
-          reject(new Error(`HTTP ${xhr.status}`));
-        }
-      });
+    xhr.addEventListener("load", () => {
+      if (xhr.status === 200) {
+        const json = JSON.parse(xhr.responseText);
+        if (json.secure_url) resolve(json.secure_url);
+        else reject(new Error("No URL in response"));
+      } else {
+        reject(new Error(`HTTP ${xhr.status}`));
+      }
+    });
 
-      xhr.addEventListener("error", () => reject(new Error("Network error")));
-      xhr.send(formData);
-
-    } catch (err) {
-      reject(err);
-    }
+    xhr.addEventListener("error", () => reject(new Error("Network error")));
+    xhr.send(formData);
   });
 }
 /* ── Image lightbox (zoomable) ──────────────────────────── */
@@ -1419,7 +1408,7 @@ function showClientTypingBubble(visible) {
     if (adminTypingBubble) return;
     adminTypingBubble = document.createElement('div');
     adminTypingBubble.id = 'client-typing-bubble';
-    adminTypingBubble.className = 'chat-msg-wrap client'; // left-aligned
+    adminTypingBubble.className = 'msg-wrap client';// left-aligned
     adminTypingBubble.innerHTML = `
       <div class="chat-typing-bubble">
         <span class="typing-dot"></span>
